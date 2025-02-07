@@ -2,18 +2,26 @@
 #include <WebServer.h>
 #include "DHT.h"
 
-#define WIFI_SSID "Wokwi-GUEST"
-#define WIFI_PASSWORD ""
-#define DHTPIN 18
-#define DHTTYPE DHT22
+#define WIFI_SSID "Wokwi-GUEST"     // dummy Wi-Fi name
+#define WIFI_PASSWORD ""            // dummy Wi-Fi password
+#define DHTPIN 18                   // pin to which DHT connected
+#define DHTTYPE DHT22               // specify the sensor type
 
-DHT dht(DHTPIN, DHTTYPE);
-WebServer server(80);
+DHT dht(DHTPIN, DHTTYPE);           // Creates a DHT sensor object.
+WebServer server(80);               // Creates an HTTP server listening on port 80
+
+// send the HTML file
 
 void sendHtml() {
+
+  // get measurements from the DHT sensor
+
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
-  
+
+  // WEBPAGE design
+
+// ----------------------------HTML  
   String response = "<!DOCTYPE html><html><head><title>ESP32 DHT22</title>";
   response += "<style>";
   response += "body { font-family: Arial, sans-serif; text-align: center; background: linear-gradient(to right, #4facfe, #00f2fe); color: white; margin: 0; padding: 0; }";
@@ -33,27 +41,46 @@ void sendHtml() {
 
   response += "</body></html>";
 
+// -------------------------------------HTML
+
   server.send(200, "text/html", response);
+/*
+  200 → HTTP status code, meaning OK (successful response)
+  "text/html" → Content type, indicating that the response is HTML
+  response → The actual HTML page
+*/
+
 }
 
 void setup() {
-  Serial.begin(115200);
-  dht.begin();
+  Serial.begin(115200);         // Serial baud rate
+  dht.begin();                  // Sensor initialisation
+
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  //          Wifi name , password
+
   Serial.print("Connecting to WiFi");
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+  
   Serial.println(" Connected!");
   Serial.print("IP Address: ");
+
+  // get esp's IP
   Serial.println(WiFi.localIP());
 
-  server.on("/", sendHtml);
+  server.on("/", sendHtml);         // detect connection and send webpage
+  
+  // start server
   server.begin();
   Serial.println("HTTP server started");
 }
 
 void loop() {
+  // Continuously listens for incoming HTTP requests and responds with sendHtml()
   server.handleClient();
 }
